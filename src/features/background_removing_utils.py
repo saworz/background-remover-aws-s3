@@ -18,21 +18,22 @@ def open_image(image: st.runtime.uploaded_file_manager.UploadedFile) -> bytearra
             return bytearray(f)
 
 
+def normalize(input_image: cv2.imdecode) -> torch.Tensor:
+    """Normalizes color channels"""
+    resized_image = transform.resize(input_image, (320, 320), mode='constant')
+    temp_img = np.zeros((resized_image.shape[0], resized_image.shape[1], 3))
+
+    temp_img[:, :, 0] = (resized_image[:, :, 0] - 0.485) / 0.229
+    temp_img[:, :, 1] = (resized_image[:, :, 1] - 0.456) / 0.224
+    temp_img[:, :, 2] = (resized_image[:, :, 2] - 0.406) / 0.225
+
+    temp_img = temp_img.transpose((2, 0, 1))
+    temp_img = np.expand_dims(temp_img, 0)
+    return torch.from_numpy(temp_img)
+
+
 def transform_image(bytes_img: bytearray) -> torch.FloatTensor:
     """Transforms image to be compatible model input"""
-    def normalize(input_image: cv2.imdecode) -> torch.Tensor:
-        """Normalizes color channels"""
-        resized_image = transform.resize(input_image, (320, 320), mode='constant')
-        temp_img = np.zeros((resized_image.shape[0], resized_image.shape[1], 3))
-
-        temp_img[:, :, 0] = (resized_image[:, :, 0] - 0.485) / 0.229
-        temp_img[:, :, 1] = (resized_image[:, :, 1] - 0.456) / 0.224
-        temp_img[:, :, 2] = (resized_image[:, :, 2] - 0.406) / 0.225
-
-        temp_img = temp_img.transpose((2, 0, 1))
-        temp_img = np.expand_dims(temp_img, 0)
-        return torch.from_numpy(temp_img)
-
     np_arr = np.frombuffer(bytes_img, np.uint8)
     image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     image = normalize(image)

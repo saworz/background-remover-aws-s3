@@ -11,7 +11,7 @@ parent_dir = dirname(dirname(current_dir))
 sys.path.insert(0, parent_dir)
 
 
-class Paths:
+class CommonPaths:
     """Contains and creates paths to directories used in other parts of program"""
     def __init__(self) -> None:
         self.temp_dir = Path(__file__).parents[2] / 'data' / 'temp'

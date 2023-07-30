@@ -53,9 +53,8 @@ class AwsClient:
             return Image.open(io.BytesIO(img_data))
         except ClientError as ex:
             if ex.response['Error']['Code'] == 'NoSuchKey':
-                logging.info('NoSuchKey error - no object found - returning None')
+                logging.error('NoSuchKey error - no object found - returning None')
                 st.markdown("Error, no object found!")
-                return None
             else:
                 raise
 

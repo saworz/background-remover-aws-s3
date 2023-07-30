@@ -6,19 +6,19 @@ import streamlit.runtime.uploaded_file_manager
 import torch
 import streamlit as st
 from PIL import Image
-from src.streamlit_ui.initialization import Paths
+from src.streamlit_ui.initialization import CommonPaths
 from src.model.model import load_model
 
 
 def open_image(image: st.runtime.uploaded_file_manager.UploadedFile) -> bytearray:
     """Loads local image"""
     if isinstance(image, BytesIO):
-        with open(Paths().inputs_dir / st.session_state.uploaded_image.name, 'rb') as image:
+        with open(CommonPaths().inputs_dir / st.session_state.uploaded_image.name, 'rb') as image:
             f = image.read()
             return bytearray(f)
 
 
-def transform_image(bytes_img) -> torch.FloatTensor:
+def transform_image(bytes_img: bytearray) -> torch.FloatTensor:
     """Transforms image to be compatible model input"""
     def normalize(input_image: cv2.imdecode) -> torch.Tensor:
         """Normalizes color channels"""
@@ -52,7 +52,7 @@ def apply_threshold(input_pred: torch.Tensor, threshold: float) -> torch.Tensor:
 def get_images_from_model_output(results: torch.Tensor) -> tuple[np.array, np.array]:
     """Model's output postprocessing to get mask and image with no background"""
     results_np = results.squeeze().cpu().data.numpy()
-    raw_img_path = Paths().inputs_dir / st.session_state.uploaded_image.name
+    raw_img_path = CommonPaths().inputs_dir / st.session_state.uploaded_image.name
 
     img = Image.fromarray((results_np * 255).astype(np.uint8)).convert('RGB')
     input_image = io.imread(str(raw_img_path))
@@ -64,7 +64,7 @@ def get_images_from_model_output(results: torch.Tensor) -> tuple[np.array, np.ar
     return mask, image_out
 
 
-def remove_background(image) -> tuple[np.array, np.array]:
+def remove_background(image: st.runtime.uploaded_file_manager.UploadedFile) -> tuple[np.array, np.array]:
     """Removes background from an image, returns mask and image without background"""
     model = load_model()
     bytes_img = open_image(image)

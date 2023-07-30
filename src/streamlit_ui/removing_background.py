@@ -4,8 +4,8 @@ import logging
 import streamlit as st
 import streamlit.runtime.uploaded_file_manager
 from .ui import create_header
-from .initialization import Paths
-from src.features.background_remover import remove_background
+from .initialization import CommonPaths
+from src.features.background_removing_utils import remove_background
 
 
 def upload_file() -> st.runtime.uploaded_file_manager.UploadedFile:
@@ -30,11 +30,11 @@ def set_threshold() -> float:
     return threshold
 
 
-def save_uploaded_file(file) -> None:
+def save_uploaded_file(file: st.runtime.uploaded_file_manager.UploadedFile) -> None:
     """Saves uploaded file locally"""
     filename = file.name
 
-    with open(os.path.join(Paths().inputs_dir, filename), 'wb') as f:
+    with open(os.path.join(CommonPaths().inputs_dir, filename), 'wb') as f:
         f.write(file.getbuffer())
     logging.info('Uploaded file saved')
 

@@ -13,7 +13,7 @@ from src.model.model import load_model
 def open_image(image: st.runtime.uploaded_file_manager.UploadedFile) -> bytearray:
     """Loads local image"""
     if isinstance(image, BytesIO):
-        with open(Paths().inputs_dir / st.session_state.uploaded_image.name, "rb") as image:
+        with open(Paths().inputs_dir / st.session_state.uploaded_image.name, 'rb') as image:
             f = image.read()
             return bytearray(f)
 

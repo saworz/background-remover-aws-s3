@@ -12,7 +12,7 @@ def load_model() -> U2NET:
 
     current_dir = os.path.dirname(__file__)
 
-    logging.info("Loading model...")
+    logging.info('Loading model...')
     model_name = 'u2net'
     model_dir = os.path.join(
         Path(current_dir).parents[1], 'saved_models',

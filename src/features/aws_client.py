@@ -6,12 +6,13 @@ import json
 from dotenv import load_dotenv
 import streamlit as st
 from pathlib import Path
+from botocore.exceptions import ClientError
+import logging
 
 
 class AwsClient:
     """Sends and receives data to/from AWS S3 bucket"""
     def __init__(self, bucket: str) -> None:
-
         load_dotenv()
         self.aws_access_key_id = os.getenv('env_aws_access_key_id')
         self.aws_secret_access_key = os.getenv('env_aws_secret_access_key')
@@ -41,24 +42,32 @@ class AwsClient:
             InvocationType='RequestResponse')
 
         json_string = response['Payload'].read().decode()
-        files_list = json.loads(json_string)["body"]
+        files_list = json.loads(json_string)['body']
         return files_list
 
     def get_image_from_s3(self, filename: str) -> Image:
         """Loads image in PIL.Image format from S3 bucket"""
-        image = self.s3_client.Bucket(self.bucket).Object(filename)
-        img_data = image.get().get('Body').read()
-
-        return Image.open(io.BytesIO(img_data))
+        try:
+            image = self.s3_client.Bucket(self.bucket).Object(filename)
+            img_data = image.get().get('Body').read()
+            return Image.open(io.BytesIO(img_data))
+        except ClientError as ex:
+            if ex.response['Error']['Code'] == 'NoSuchKey':
+                logging.info('NoSuchKey error - no object found - returning None')
+                st.markdown("Error, no object found!")
+                return None
+            else:
+                raise
 
     def lambda_crop_image(self, filename: str, coords: list[int]) -> None:
         """Invokes lambda function to crop and save image in S3 bucket"""
-        payload_dict = {"filename": filename, "coordinates": coords}
+        payload_dict = {'filename': filename, 'coordinates': coords}
         response = self.lambda_client.invoke(
             FunctionName='crop_images',
             InvocationType='RequestResponse',
             Payload=json.dumps(payload_dict))
 
         json_string = response['Payload'].read().decode()
-        response = json.loads(json_string)["body"]
+        response = json.loads(json_string)['body']
         st.markdown(response)
+        logging.info(response)
